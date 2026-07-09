@@ -2,7 +2,7 @@
 
 **A working demo of four automation tools that give every law-firm associate back 6+ hours a week.**
 
-Built by **[Your Name]** — Business Analyst with legal domain knowledge and technical skills.
+Built by Poonam Nauroji — Business Analyst with legal domain knowledge and technical skills.
 
 > Dashboards show you the problem. Automation removes it. LexOps does both.
 
