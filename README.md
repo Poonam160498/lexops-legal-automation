@@ -10,7 +10,6 @@ Built by Poonam Nauroji — Business Analyst with legal domain knowledge and tec
 
  https://poonam160498.github.io/lexops-legal-automation/ 
  — no installation, no dependencies, no build step.
-(Or enable GitHub Pages on this repo and link it here.)
 
 ## The problem
 
