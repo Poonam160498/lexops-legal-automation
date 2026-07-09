@@ -24,7 +24,7 @@ Indian law firms run world-class legal work on operational workflows held togeth
 
 ## The tools
 
-### 📊 Operations Dashboard
+###  Operations Dashboard
 Firm-wide view: matter pipeline with days-in-stage, billable-hours split per fee earner, deadline tracker with urgency chips, practice-area mix, and a live "time recovered" ROI table.
 
 ### 📋 Cause List Monitor
@@ -49,13 +49,13 @@ A generic developer doesn't know what a cause list is, how Sec. 34(3)'s condonat
 - Demo data throughout; limitation periods are **indicative only** and clearly disclaimed in-app — production use requires litigation-team verification against the statute
 - Production roadmap: eCourts/HC portal fetchers, case-management integration, WhatsApp Business API for client updates, LLM-drafted billing narratives with partner approval flow, audit trail
 
-## ⚠️ Disclaimer
+##  Disclaimer
 
 This is a portfolio demonstration with dummy data. Nothing here is legal advice, and the limitation periods shown are simplified. Always verify deadlines against the Limitation Act, 1963 and the relevant statute before filing.
 
-## 📬 Contact
+##  Contact
 
 Open to legal-ops / business-analyst roles at law firms and legal-tech companies.
 
-- LinkedIn: [your-linkedin-url]
-- Email: [your-email]
+- LinkedIn: www.linkedin.com/in/poonam-nauroji
+- Email: naurojipunam@gmail.com
