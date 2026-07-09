@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexOps — Legal Operations Suite</title>
+<style>
+  :root{
+    /* Law-library palette: leather green, oxblood, brass, parchment */
+    --forest:#1B3A2E;       /* primary — deep leather green */
+    --forest-2:#25503F;     /* hover / secondary green */
+    --oxblood:#7C2D26;      /* alerts, critical */
+    --oxblood-soft:#F4E4E2;
+    --brass:#A87B2F;        /* accent, highlights */
+    --brass-soft:#F2E8D5;
+    --parchment:#F4F1E9;    /* app background */
+    --card:#FFFFFF;
+    --ink:#1E2A26;          /* primary text */
+    --muted:#5F6D66;        /* secondary text */
+    --line:#E2DDD0;
+    --ok:#2F6B4F; --ok-soft:#E2EFE8;
+    --warn:#A8681C; --warn-soft:#F7ECDA;
+    --serif:Charter,"Bitstream Charter",Cambria,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",Consolas,"Liberation Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--parchment);font-family:var(--sans);color:var(--ink);font-size:13.5px;display:flex;min-height:100vh}
+
+  /* ============ SIDEBAR ============ */
+  .side{width:224px;background:var(--forest);color:#E9EFEA;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0}
+  .side .logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .side .logo h1{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:.5px}
+  .side .logo h1 span{color:var(--brass)}
+  .side .logo p{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#8FAA9B;margin-top:3px}
+  .nav{padding:14px 10px;flex:1}
+  .nav .sect{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#7E9A8B;padding:12px 10px 6px}
+  .nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;color:#C9D6CD;font-family:var(--sans);font-size:13px;font-weight:500;padding:9px 10px;border-radius:7px;cursor:pointer;transition:background .12s}
+  .nav button:hover{background:rgba(255,255,255,.07)}
+  .nav button.on{background:var(--brass);color:#1E2A26;font-weight:600}
+  .nav button .ic{width:18px;text-align:center}
+  .nav button .badge{margin-left:auto;background:var(--oxblood);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+  .side .foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8FAA9B;line-height:1.5}
+  .side .foot b{color:var(--brass)}
+  [contenteditable="true"]{outline:none;border-bottom:1px dashed rgba(168,123,47,.7);cursor:text}
+  [contenteditable="true"]:focus{background:rgba(168,123,47,.2)}
+
+  /* ============ MAIN ============ */
+  .main{margin-left:224px;flex:1;display:flex;flex-direction:column;min-width:0}
+  .tophead{background:var(--card);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  .tophead h2{font-family:var(--serif);font-size:19px;font-weight:600}
+  .tophead .sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .tophead .right{text-align:right;font-size:11.5px;color:var(--muted)}
+  .tophead .right b{display:block;color:var(--ink);font-size:12.5px}
+  .content{padding:22px 26px 60px;max-width:1240px;width:100%}
+
+  .view{display:none}
+  .view.show{display:block;animation:fade .25s}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  /* ============ CARDS / PANELS ============ */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+  .kpi .l{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .kpi .v{font-family:var(--serif);font-size:23px;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+  .kpi .d{font-size:11px;margin-top:5px;font-weight:600}
+  .kpi .d.good{color:var(--ok)} .kpi .d.bad{color:var(--oxblood)} .kpi .d.neut{color:var(--muted);font-weight:500}
+  .kpi.hero{background:var(--forest);border-color:var(--forest);color:#fff}
+  .kpi.hero .l{color:#9DB8AA} .kpi.hero .v{color:var(--brass)} .kpi.hero .d.good{color:#8FD1AE}
+
+  .grid{display:grid;gap:14px;margin-bottom:16px}
+  .g-2-1{grid-template-columns:1.9fr 1fr}
+  .g-1-1{grid-template-columns:1fr 1fr}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+  .panel h3{font-family:var(--serif);font-size:15.5px;font-weight:600}
+  .panel .cap{font-size:11px;color:var(--muted);margin:2px 0 13px}
+  .phead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+
+  /* pipeline */
+  .pipeline{display:flex;gap:5px;margin-bottom:12px}
+  .stage{flex:1;text-align:center;cursor:pointer;border-radius:7px;padding:3px;transition:background .12s}
+  .stage:hover{background:var(--brass-soft)}
+  .stage.act{background:var(--brass-soft);box-shadow:inset 0 0 0 1.5px var(--brass)}
+  .stage .bar{height:48px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:18px;font-weight:600;color:#fff}
+  .stage .nm{font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .stage .dy{font-size:10px;color:var(--brass);font-weight:600;min-height:13px}
+  .p1{background:#26463A}.p2{background:#31584A}.p3{background:#3E6D5C}.p4{background:var(--brass)}.p5{background:#7E9A8B}.p6{background:#C4CFC5;color:var(--ink)!important}
+  .stage-detail{border-top:1px dashed var(--line);padding-top:10px;font-size:12px;line-height:1.55;min-height:36px;color:var(--ink)}
+  .stage-detail em{color:var(--muted)}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-bottom:1.5px solid var(--line);white-space:nowrap}
+  td{padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--parchment)}
+  tr:last-child td{border-bottom:none}
+  .chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+  .chip.crit{background:var(--oxblood-soft);color:var(--oxblood)}
+  .chip.soon{background:var(--warn-soft);color:var(--warn)}
+  .chip.ok{background:var(--ok-soft);color:var(--ok)}
+  .chip.done{background:#ECEAE2;color:#8A877C}
+  td .m{font-weight:600} td .c{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+
+  /* hours */
+  .hrow{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .hrow .w{width:88px;font-size:12px;font-weight:600}
+  .hrow .t{flex:1;height:15px;background:var(--parchment);border-radius:8px;overflow:hidden;display:flex}
+  .hrow .b{background:var(--forest);height:100%;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .hrow .n{background:#CFC9B8;height:100%;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .hrow .x{width:56px;text-align:right;font-size:11px;color:var(--muted)}
+  .lg{display:flex;gap:14px;font-size:10.5px;color:var(--muted);margin-top:8px}
+  .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+  /* activity feed */
+  .act-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5}
+  .act-item:last-child{border:none}
+  .act-item .tm{color:var(--muted);font-size:10.5px;white-space:nowrap;font-family:var(--mono);padding-top:1px}
+  .act-item b{font-weight:600}
+
+  /* areas */
+  .areas{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .area{text-align:center;padding:8px 4px;border-radius:7px;cursor:pointer}
+  .area:hover{background:var(--parchment)}
+  .area .p{font-family:var(--serif);font-size:19px;font-weight:600}
+  .area .n2{font-size:10px;color:var(--muted);margin-top:2px}
+  .area .b2{height:4px;border-radius:2px;background:var(--parchment);margin-top:6px;overflow:hidden}
+  .area .b2 i{display:block;height:100%;width:0;transition:width .7s}
+  .area-detail{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;min-height:14px}
+
+  /* toggle + filters + buttons */
+  .tgl{display:flex;gap:3px;background:var(--parchment);border-radius:7px;padding:3px}
+  .tgl button{border:none;background:transparent;font-size:11px;padding:4px 11px;border-radius:5px;cursor:pointer;color:var(--muted);font-weight:600;font-family:var(--sans)}
+  .tgl button.on{background:var(--forest);color:#fff}
+  .filters{display:flex;gap:5px;flex-wrap:wrap}
+  .filters button{border:1px solid var(--line);background:var(--card);font-size:10.5px;font-weight:600;padding:4px 11px;border-radius:14px;cursor:pointer;color:var(--muted);font-family:var(--sans)}
+  .filters button.on{background:var(--forest);color:#fff;border-color:var(--forest)}
+  .btn{background:var(--forest);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;margin-top:14px}
+  .btn:hover{background:var(--forest-2)}
+  .btn.gold{background:var(--brass)} .btn.gold:hover{background:#94690F}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);margin-left:8px}
+
+  label{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:13px 0 5px}
+  select,input[type=date],input[type=text],textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--parchment)}
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:-1px}
+  textarea{resize:vertical;min-height:100px;line-height:1.6;font-family:var(--mono);font-size:12px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .pain{font-size:12px;color:var(--muted);margin:6px 0 4px;padding:10px 12px;background:var(--parchment);border-left:3px solid var(--oxblood);border-radius:0 7px 7px 0;line-height:1.55}
+  .pain b{color:var(--oxblood)}
+  .roi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+  .roi div{background:var(--parchment);border-radius:8px;padding:10px 12px;text-align:center}
+  .roi .rv{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--forest)}
+  .roi .rl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+
+  .result{margin-top:18px;display:none}
+  .result.show{display:block;animation:fade .3s}
+  .disclaimer{margin-top:12px;font-size:10.5px;color:var(--muted);background:var(--parchment);border:1px dashed var(--line);border-radius:7px;padding:9px 11px;line-height:1.55}
+
+  .phone{max-width:400px;background:#E7E1D6;border-radius:12px;padding:12px;margin-top:8px}
+  .phone .msg{background:#fff;border-left:3px solid var(--forest);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;box-shadow:0 1px 2px rgba(30,42,38,.1)}
+  .phone .tm2{text-align:right;font-size:10px;color:#8A877C;margin-top:4px}
+
+  .feed-item{display:flex;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);align-items:flex-start;font-size:12px;line-height:1.5}
+  .feed-item:last-child{border:none}
+  .feed-item .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .dot.hit{background:var(--ok)} .dot.miss{background:#CFC9B8}
+  .feed-item.dim{opacity:.45}
+  .scanline{font-size:11.5px;color:var(--muted);font-style:italic;margin-top:8px}
+
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .ba .col{background:var(--parchment);border-radius:9px;padding:12px;font-size:12px;line-height:1.6}
+  .ba .col h4{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+  .ba .before h4{color:var(--oxblood)} .ba .after h4{color:var(--ok)}
+  .ba .after{border:1px solid var(--ok-soft);background:#FBFCF9}
+  .savings{margin-top:10px;font-size:12px;color:var(--ok);font-weight:600}
+  .copied{font-size:11.5px;color:var(--ok);margin-left:8px;opacity:0;transition:opacity .2s}
+  .copied.flash{opacity:1}
+
+  @media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}.g-2-1,.g-1-1,.row2,.ba{grid-template-columns:1fr}.side{width:64px}.side .logo h1,.side .logo p,.nav .sect,.nav button span.txt,.side .foot{display:none}.main{margin-left:64px}.areas{grid-template-columns:repeat(2,1fr)}.roi{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="side">
+  <div class="logo">
+    <h1>Lex<span>Ops</span></h1>
+    <p>Legal Operations Suite</p>
+  </div>
+  <nav class="nav">
+    <div class="sect">Overview</div>
+    <button class="on" data-v="v0"><span class="ic">◈</span><span class="txt">Dashboard</span></button>
+    <div class="sect">Automation Tools</div>
+    <button data-v="v1"><span class="ic">📋</span><span class="txt">Cause List Monitor</span><span class="badge">3</span></button>
+    <button data-v="v2"><span class="ic">⏳</span><span class="txt">Limitation Calculator</span></button>
+    <button data-v="v3"><span class="ic">💬</span><span class="txt">Client Updates</span></button>
+    <button data-v="v4"><span class="ic">🧾</span><span class="txt">Billing Narratives</span></button>
+  </nav>
+  <div class="foot">
+    Demo build · dummy data<br>
+    Designed &amp; built by<br><b contenteditable="true" spellcheck="false">[ click to add your name ]</b><br>
+    Business Analyst — Legal · Tech
+  </div>
+</aside>
+
+<!-- ============ MAIN ============ -->
+<div class="main">
+  <div class="tophead">
+    <div>
+      <h2 id="pgTitle">Dashboard</h2>
+      <div class="sub" id="pgSub">Firm-wide operations at a glance · Mehta &amp; Associates LLP (sample)</div>
+    </div>
+    <div class="right"><b>Week 28 · FY 2026–27</b><span id="clock">Synced —</span></div>
+  </div>
+
+  <div class="content">
+
+  <!-- ================= VIEW 0: DASHBOARD ================= -->
+  <div class="view show" id="v0">
+    <div class="kpis">
+      <div class="kpi hero"><div class="l">Avg. Intake Time</div><div class="v"><span class="count" data-to="3.2" data-dec="1">0</span>d</div><div class="d good">▼ 77% vs. pre-automation (14d)</div></div>
+      <div class="kpi"><div class="l">Active Matters</div><div class="v"><span class="count" data-to="128">0</span></div><div class="d good">▲ 12 new this month</div></div>
+      <div class="kpi"><div class="l">Billing Realisation</div><div class="v"><span class="count" data-to="87">0</span>%</div><div class="d good">▲ 9 pts vs. Q4</div></div>
+      <div class="kpi"><div class="l">Unbilled WIP</div><div class="v">₹<span class="count" data-to="42.6" data-dec="1">0</span>L</div><div class="d bad">3 invoices pending approval</div></div>
+      <div class="kpi"><div class="l">Hearings This Week</div><div class="v"><span class="count" data-to="11">0</span></div><div class="d neut">Across 5 forums</div></div>
+      <div class="kpi"><div class="l">Missed Deadlines YTD</div><div class="v"><span class="count" data-to="0">0</span></div><div class="d good">Central tracker live since May</div></div>
+    </div>
+
+    <div class="grid g-2-1">
+      <div class="panel">
+        <h3>Matter Pipeline</h3>
+        <div class="cap">Live count per stage · click any stage for a breakdown · average days-in-stage shown below each</div>
+        <div class="pipeline" id="pipeline"></div>
+        <div class="stage-detail" id="stageDetail"><em>Select a stage above to see where matters are queued and why.</em></div>
+      </div>
+      <div class="panel">
+        <div class="phead">
+          <div><h3>Billable Hours</h3><div class="cap">Fee earner · weekly split</div></div>
+          <div class="tgl"><button class="on" data-week="this">This wk</button><button data-week="last">Last wk</button></div>
+        </div>
+        <div id="hoursChart"></div>
+        <div class="lg"><span><i style="background:var(--forest)"></i>Billable</span><span><i style="background:#CFC9B8"></i>Non-billable</span></div>
+      </div>
+    </div>
+
+    <div class="grid g-2-1">
+      <div class="panel">
+        <div class="phead">
+          <div><h3>Upcoming Deadlines &amp; Hearings</h3><div class="cap">Next 10 days · auto-pulled from the matter tracker · filter by owner</div></div>
+          <div class="filters" id="ownerFilters"></div>
+        </div>
+        <table>
+          <thead><tr><th>Matter</th><th>Task</th><th>Forum</th><th>Due</th><th>Owner</th><th>Urgency</th></tr></thead>
+          <tbody id="deadlineBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Practice Area Mix</h3>
+        <div class="cap">Share of 128 active matters · click for details</div>
+        <div class="areas" id="areas"></div>
+        <div class="area-detail" id="areaDetail">128 active matters in total</div>
+        <div style="border-top:1px dashed var(--line);margin-top:12px;padding-top:12px">
+          <h3 style="font-size:13.5px">Automation Wins — Q1</h3>
+          <table style="margin-top:6px">
+            <tbody>
+              <tr><td>Intake workflow automation</td><td style="text-align:right;color:var(--ok);font-weight:700">−77% cycle time</td></tr>
+              <tr><td>Invoice follow-up sequences</td><td style="text-align:right;color:var(--ok);font-weight:700">−18 days DSO</td></tr>
+              <tr><td>Central limitation tracker</td><td style="text-align:right;color:var(--ok);font-weight:700">0 missed dates</td></tr>
+              <tr><td>Client auto-updates</td><td style="text-align:right;color:var(--ok);font-weight:700">−64% status calls</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g-1-1">
+      <div class="panel">
+        <h3>Today's Activity</h3>
+        <div class="cap">Live feed from connected tools</div>
+        <div class="act-item"><span class="tm">09:41</span><span><b>Cause List Monitor</b> flagged 3 listings today — alerts sent to A. Sharma, R. Iyer, T. Bose.</span></div>
+        <div class="act-item"><span class="tm">09:15</span><span><b>Limitation Calculator</b>: Sec. 34 outer limit for <b>Aurora Realty JV</b> falls in 21 days — reminder escalated to partner.</span></div>
+        <div class="act-item"><span class="tm">08:52</span><span><b>Client Updates</b>: post-hearing note for <b>Ghosh Family Trust</b> approved &amp; sent. Client acknowledged.</span></div>
+        <div class="act-item"><span class="tm">08:30</span><span><b>Billing Narratives</b>: 14 entries cleaned for the Trident Pharma invoice — partner review queue cleared.</span></div>
+        <div class="act-item"><span class="tm">07:02</span><span><b>Morning scan</b> completed: 612 items across 3 forums in 4.2s.</span></div>
+      </div>
+      <div class="panel">
+        <h3>Estimated Time Recovered</h3>
+        <div class="cap">Weekly, per the four automation tools (firm of 5 fee earners)</div>
+        <table>
+          <thead><tr><th>Workflow</th><th>Before</th><th>After</th><th>Saved / wk</th></tr></thead>
+          <tbody>
+            <tr><td>Cause list checking</td><td>3.75 h</td><td>0 h</td><td style="color:var(--ok);font-weight:700">3.75 h</td></tr>
+            <tr><td>Client status calls</td><td>7.5 h</td><td>2.7 h</td><td style="color:var(--ok);font-weight:700">4.8 h</td></tr>
+            <tr><td>Billing narrative rewrites</td><td>4 h</td><td>0.6 h</td><td style="color:var(--ok);font-weight:700">3.4 h</td></tr>
+            <tr><td>Deadline diarising</td><td>2 h</td><td>0.3 h</td><td style="color:var(--ok);font-weight:700">1.7 h</td></tr>
+            <tr><td><b>Total</b></td><td>17.25 h</td><td>3.6 h</td><td style="color:var(--ok);font-weight:700">13.65 h ≈ ₹68k/wk*</td></tr>
+          </tbody>
+        </table>
+        <div class="disclaimer">*Illustrative, at a blended rate of ₹5,000/hr. Assumptions editable in the production build.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 1: CAUSE LIST ================= -->
+  <div class="view" id="v1">
+    <div class="panel">
+      <h3>📋 Morning Cause List Monitor</h3>
+      <div class="pain"><b>The problem:</b> every morning a clerk manually scans cause lists across the High Court, NCLT and district courts — ~45 minutes daily, and a single missed listing means an unrepresented matter.</div>
+      <div class="roi">
+        <div><div class="rv">3.75 h</div><div class="rl">saved / week</div></div>
+        <div><div class="rv">4.2 s</div><div class="rl">scan time, 3 forums</div></div>
+        <div><div class="rv">0</div><div class="rl">missed listings since launch</div></div>
+      </div>
+      <label>Tracked matters (pre-loaded in this demo)</label>
+      <input type="text" value="Regent Steel v. Kohli Infra · Ghosh Family Trust · Trident Pharma · Aurora Realty JV · State v. Malhotra" disabled>
+      <button class="btn gold" onclick="runScan()">▶ Run morning scan (7:00 AM simulation)</button>
+      <div class="result" id="scanResult">
+        <label>Scan feed — Delhi High Court · NCLT Mumbai · Saket District Court</label>
+        <div id="feed"></div>
+        <div class="scanline" id="scanline"></div>
+        <label style="margin-top:18px">Auto-generated team alert</label>
+        <div class="phone"><div class="msg" id="waMsg"></div><div class="tm2">07:02 AM · delivered</div></div>
+        <button class="btn ghost" onclick="copyText('waMsg', this)" style="margin-left:0">Copy message</button><span class="copied">Copied!</span>
+        <div class="disclaimer">Demo note: the cause list here is simulated. The production build fetches each forum's published daily lists (eCourts / High Court portals) on a schedule and matches them against the firm's live matter index.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 2: LIMITATION ================= -->
+  <div class="view" id="v2">
+    <div class="panel">
+      <h3>⏳ Limitation &amp; Deadline Calculator</h3>
+      <div class="pain"><b>The problem:</b> a single missed limitation date is a malpractice exposure and a lost client. Today this depends on a senior's memory and a physical diary.</div>
+      <div class="roi">
+        <div><div class="rv">0</div><div class="rl">missed dates YTD</div></div>
+        <div><div class="rv">8</div><div class="rl">filing types covered (demo)</div></div>
+        <div><div class="rv">1-click</div><div class="rl">export to calendar</div></div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Filing / case type</label>
+          <select id="caseType">
+            <option value="ws">Written Statement — Civil Suit (CPC)</option>
+            <option value="wsc">Written Statement — Commercial Suit</option>
+            <option value="appeal_hc">First Appeal to High Court (from decree)</option>
+            <option value="slp">Special Leave Petition — Supreme Court</option>
+            <option value="s34">Sec. 34 Challenge — Arbitral Award</option>
+            <option value="ibc61">Appeal to NCLAT (IBC, Sec. 61)</option>
+            <option value="ni138">Cheque Dishonour — NI Act Sec. 138 chain</option>
+            <option value="consumer">Consumer Complaint (CP Act)</option>
+          </select>
+        </div>
+        <div>
+          <label>Trigger date (summons / decree / award / dishonour memo)</label>
+          <input type="date" id="trigDate">
+        </div>
+      </div>
+      <button class="btn gold" onclick="calcLimitation()">▶ Calculate deadlines</button>
+      <div class="result" id="limResult">
+        <table>
+          <thead><tr><th>Deadline</th><th>Basis (indicative)</th><th>Date</th><th>Countdown</th></tr></thead>
+          <tbody id="limBody"></tbody>
+        </table>
+        <button class="btn ghost" onclick="copyTable(this)" style="margin-left:0">Copy for calendar</button><span class="copied">Copied!</span>
+        <div class="disclaimer">⚠️ Demo tool — periods shown are indicative and based on general provisions. Actual limitation depends on condonation, statutory exclusions (Secs. 4–15, Limitation Act), forum-specific rules and amendments. Verify against the statute before filing. In the production build, the litigation team configures and approves every period before it goes live.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 3: CLIENT UPDATES ================= -->
+  <div class="view" id="v3">
+    <div class="panel">
+      <h3>💬 Post-Hearing Client Updates</h3>
+      <div class="pain"><b>The problem:</b> after every hearing, clients call and message repeatedly for status. Associates lose 1–2 hours a day simply repeating what happened in court.</div>
+      <div class="roi">
+        <div><div class="rv">−64%</div><div class="rl">status calls</div></div>
+        <div><div class="rv">4.8 h</div><div class="rl">saved / week</div></div>
+        <div><div class="rv">100%</div><div class="rl">clients updated same-day</div></div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Matter</label>
+          <select id="cuMatter">
+            <option>Regent Steel v. Kohli Infra (NCLT, Mumbai)</option>
+            <option>Ghosh Family Trust (Delhi High Court)</option>
+            <option>Trident Pharma — IP Opposition (TM Registry)</option>
+            <option>Aurora Realty JV (SIAC Arbitration)</option>
+          </select>
+        </div>
+        <div>
+          <label>Today's outcome</label>
+          <select id="cuOutcome">
+            <option value="adjourned">Adjourned — next date given</option>
+            <option value="arguments">Arguments partly heard</option>
+            <option value="order_reserved">Order reserved</option>
+            <option value="favourable">Favourable interim order</option>
+            <option value="filing">Reply / documents filed &amp; taken on record</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div><label>Next date (if any)</label><input type="date" id="cuNext"></div>
+        <div>
+          <label>Register</label>
+          <select id="cuLang">
+            <option value="formal">Formal — institutional client</option>
+            <option value="warm">Warm — individual client</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn gold" onclick="genUpdate()">▶ Draft client update</button>
+      <div class="result" id="cuResult">
+        <label>Auto-drafted update — associate reviews &amp; sends in one click</label>
+        <div class="phone"><div class="msg" id="cuMsg"></div><div class="tm2">draft · pending review</div></div>
+        <button class="btn ghost" onclick="copyText('cuMsg', this)" style="margin-left:0">Copy message</button><span class="copied">Copied!</span>
+        <div class="disclaimer">Production build: the hearing outcome flows in from the case-management system; the approved message goes out on the client's preferred channel (email / WhatsApp Business API) with full audit trail.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 4: BILLING ================= -->
+  <div class="view" id="v4">
+    <div class="panel">
+      <h3>🧾 Billing Narrative Cleaner</h3>
+      <div class="pain"><b>The problem:</b> juniors record entries like "work done — 4 hrs". Clients reject the invoice; partners spend evenings rewriting narratives line by line.</div>
+      <div class="roi">
+        <div><div class="rv">3.4 h</div><div class="rl">partner time saved / wk</div></div>
+        <div><div class="rv">−31%</div><div class="rl">invoice queries (demo firm)</div></div>
+        <div><div class="rv">0.3 s</div><div class="rl">per-entry cleanup</div></div>
+      </div>
+      <label>Paste raw time entries (one per line, format: task — hours)</label>
+      <textarea id="rawEntries">call with client abt reply — 0.5
+drafted reply — 3
+research on limitation issue — 1.5
+emails — 0.5
+went thru opp side docs — 2</textarea>
+      <button class="btn gold" onclick="cleanEntries()">▶ Clean narratives</button>
+      <div class="result" id="billResult">
+        <div class="ba">
+          <div class="col before"><h4>Before — client rejects</h4><div id="beforeCol"></div></div>
+          <div class="col after"><h4>After — client-ready</h4><div id="afterCol"></div></div>
+        </div>
+        <div class="savings" id="billSavings"></div>
+        <button class="btn ghost" onclick="copyText('afterCol', this)" style="margin-left:0">Copy cleaned entries</button><span class="copied">Copied!</span>
+        <div class="disclaimer">Demo: rule-based cleanup. The production build uses an LLM with matter context to draft narratives; the partner approves rather than rewrites.</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+/* ---------- nav ---------- */
+const titles={v0:["Dashboard","Firm-wide operations at a glance · Mehta & Associates LLP (sample)"],v1:["Cause List Monitor","Automated daily scan of court cause lists with instant team alerts"],v2:["Limitation Calculator","Deadline chains computed from a single trigger date"],v3:["Client Updates","Post-hearing client communication, drafted automatically"],v4:["Billing Narratives","Client-ready time entries without partner rewrites"]};
+document.querySelectorAll(".nav button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".view").forEach(x=>x.classList.remove("show"));
+    b.classList.add("on");
+    document.getElementById(b.dataset.v).classList.add("show");
+    document.getElementById("pgTitle").textContent=titles[b.dataset.v][0];
+    document.getElementById("pgSub").textContent=titles[b.dataset.v][1];
+    window.scrollTo({top:0});
+  };
+});
+
+/* ---------- helpers ---------- */
+function fmt(d){return d.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function addMonths(d,n){const x=new Date(d);x.setMonth(x.getMonth()+n);return x;}
+function countdown(d){
+  const days=Math.ceil((d-new Date())/(864e5));
+  if(days<0) return `<span class="chip done">passed</span>`;
+  if(days<=7) return `<span class="chip crit">${days} days</span>`;
+  if(days<=30) return `<span class="chip soon">${days} days</span>`;
+  return `<span class="chip ok">${days} days</span>`;
+}
+function copyText(id,btn){
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>{
+    const c=btn.nextElementSibling;c.classList.add("flash");setTimeout(()=>c.classList.remove("flash"),1400);
+  });
+}
+function copyTable(btn){
+  const rows=[...document.querySelectorAll("#limBody tr")].map(r=>[...r.children].slice(0,3).map(td=>td.innerText.replace(/\n/g," · ")).join(" — ")).join("\n");
+  navigator.clipboard.writeText(rows).then(()=>{
+    const c=btn.nextElementSibling;c.classList.add("flash");setTimeout(()=>c.classList.remove("flash"),1400);
+  });
+}
+
+/* ---------- KPI count-up ---------- */
+document.querySelectorAll(".count").forEach(el=>{
+  const to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec||"0");
+  const dur=900,start=performance.now();
+  (function tick(t){
+    const p=Math.min(((t||performance.now())-start)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=(to*e).toFixed(dec);
+    if(p<1)requestAnimationFrame(tick);
+  })();
+});
+
+/* ---------- pipeline ---------- */
+const stages=[
+  {n:17,name:"Intake",days:"1.1 d",cls:"p1",detail:"<b>17 matters</b> in intake. Oldest: 2 days (Novacred addendum). 15 of 17 arrived through the automated intake form; 2 were walk-ins entered manually."},
+  {n:9,name:"Conflict Check",days:"0.8 d",cls:"p2",detail:"<b>9 matters</b> in conflict check. The automated index clears ~80% within hours; 2 are flagged for partner review over related-party history."},
+  {n:12,name:"Engagement",days:"1.3 d",cls:"p3",detail:"<b>12 engagement letters</b> out for signature. E-sign adoption is 92%; average turnaround fell from 6 days to 1.3 after template automation."},
+  {n:128,name:"Active",days:"",cls:"p4",detail:"<b>128 active matters</b> across 4 practice areas. Heaviest load: Corporate (49). 5 matters flagged high-priority this week."},
+  {n:23,name:"Billing",days:"4.2 d",cls:"p5",detail:"<b>23 matters</b> in billing. ₹42.6L unbilled WIP — 3 invoices have sat with partner approval for 4+ days; the follow-up sequence nudges daily."},
+  {n:311,name:"Closed YTD",days:"",cls:"p6",detail:"<b>311 matters closed</b> this financial year. Average lifecycle: 94 days, down from 127 last FY. Zero missed limitation dates."}
+];
+const pipe=document.getElementById("pipeline"),stageDetail=document.getElementById("stageDetail");
+stages.forEach(s=>{
+  const d=document.createElement("div");
+  d.className="stage";
+  d.innerHTML=`<div class="bar ${s.cls}">${s.n}</div><div class="nm">${s.name}</div><div class="dy">${s.days}</div>`;
+  d.onclick=()=>{document.querySelectorAll(".stage").forEach(x=>x.classList.remove("act"));d.classList.add("act");stageDetail.innerHTML=s.detail;};
+  pipe.appendChild(d);
+});
+
+/* ---------- hours ---------- */
+const hoursData={
+  this:[{who:"A. Sharma",b:78,nb:14,t:"39.5 h"},{who:"R. Iyer",b:70,nb:20,t:"36.0 h"},{who:"S. Kaur",b:64,nb:22,t:"34.4 h"},{who:"V. Menon",b:58,nb:30,t:"35.2 h"},{who:"T. Bose",b:49,nb:34,t:"33.2 h"}],
+  last:[{who:"A. Sharma",b:72,nb:18,t:"36.0 h"},{who:"R. Iyer",b:75,nb:15,t:"36.0 h"},{who:"S. Kaur",b:55,nb:28,t:"33.2 h"},{who:"V. Menon",b:62,nb:24,t:"34.4 h"},{who:"T. Bose",b:58,nb:26,t:"33.6 h"}]
+};
+const hoursChart=document.getElementById("hoursChart");
+function renderHours(week){
+  if(!hoursChart.children.length){
+    hoursData[week].forEach(r=>{
+      const row=document.createElement("div");row.className="hrow";
+      row.innerHTML=`<div class="w">${r.who}</div><div class="t"><div class="b" style="width:0%"></div><div class="n" style="width:0%"></div></div><div class="x">${r.t}</div>`;
+      hoursChart.appendChild(row);
+    });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>applyHours(week)));
+  } else applyHours(week);
+}
+function applyHours(week){
+  [...hoursChart.children].forEach((row,i)=>{
+    const r=hoursData[week][i];
+    row.querySelector(".b").style.width=r.b+"%";
+    row.querySelector(".n").style.width=r.nb+"%";
+    row.querySelector(".x").textContent=r.t;
+  });
+}
+renderHours("this");
+document.querySelectorAll(".tgl button").forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll(".tgl button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderHours(b.dataset.week);};
+});
+
+/* ---------- deadlines ---------- */
+const deadlines=[
+  {matter:"Regent Steel v. Kohli Infra",court:"CP (IB) 214/2026",type:"Reply filing",forum:"NCLT, Mumbai",due:"Fri, 11 Jul",owner:"A. Sharma",chip:"crit",label:"2 days"},
+  {matter:"Trident Pharma — IP opposition",court:"Opp. No. 118/2026",type:"Evidence affidavit",forum:"TM Registry, Delhi",due:"Mon, 14 Jul",owner:"S. Kaur",chip:"soon",label:"5 days"},
+  {matter:"Ghosh Family Trust",court:"CS(OS) 88/2025",type:"Hearing",forum:"Delhi High Court",due:"Tue, 15 Jul",owner:"R. Iyer",chip:"soon",label:"6 days"},
+  {matter:"Novacred Fintech — Series B",court:"Transaction",type:"SHA final draft",forum:"—",due:"Thu, 17 Jul",owner:"V. Menon",chip:"ok",label:"8 days"},
+  {matter:"Aurora Realty JV",court:"ARB 042/25",type:"Statement of claim",forum:"SIAC",due:"Sat, 19 Jul",owner:"T. Bose",chip:"ok",label:"10 days"},
+  {matter:"State v. Malhotra",court:"SC 771/2024",type:"Evidence — PW3",forum:"Saket DC",due:"Sat, 19 Jul",owner:"T. Bose",chip:"ok",label:"10 days"}
+];
+const body=document.getElementById("deadlineBody"),filterWrap=document.getElementById("ownerFilters");
+const owners=["All",...new Set(deadlines.map(d=>d.owner))];
+function renderTable(owner){
+  body.innerHTML="";
+  deadlines.filter(d=>owner==="All"||d.owner===owner).forEach(d=>{
+    body.innerHTML+=`<tr><td><span class="m">${d.matter}</span><span class="c">${d.court}</span></td><td>${d.type}</td><td>${d.forum}</td><td>${d.due}</td><td>${d.owner}</td><td><span class="chip ${d.chip}">${d.label}</span></td></tr>`;
+  });
+  if(!body.children.length) body.innerHTML=`<tr><td colspan="6" style="color:var(--muted);font-style:italic">No deadlines for this owner in the next 10 days.</td></tr>`;
+}
+owners.forEach((o,i)=>{
+  const b=document.createElement("button");b.textContent=o;if(i===0)b.classList.add("on");
+  b.onclick=()=>{filterWrap.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderTable(o);};
+  filterWrap.appendChild(b);
+});
+renderTable("All");
+
+/* ---------- areas ---------- */
+const areas=[
+  {nm:"Corporate",pct:38,color:"var(--forest)",detail:"Corporate: 49 matters · 2 live M&A mandates · avg. matter value ₹8.2L"},
+  {nm:"Litigation",pct:27,color:"var(--brass)",detail:"Litigation: 35 matters · 11 hearings this month · 3 before the NCLT"},
+  {nm:"IP",pct:21,color:"var(--ok)",detail:"IP: 27 matters · 14 trademark, 9 copyright, 4 patent support"},
+  {nm:"Real Estate",pct:14,color:"var(--muted)",detail:"Real Estate: 17 matters · 5 title due-diligence exercises in progress"}
+];
+const areasWrap=document.getElementById("areas"),areaDetail=document.getElementById("areaDetail");
+areas.forEach(a=>{
+  const d=document.createElement("div");d.className="area";
+  d.innerHTML=`<div class="p">${a.pct}%</div><div class="n2">${a.nm}</div><div class="b2"><i style="background:${a.color}"></i></div>`;
+  d.onclick=()=>{areaDetail.textContent=a.detail;};
+  areasWrap.appendChild(d);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.querySelector(".b2 i").style.width=a.pct+"%";}));
+});
+
+/* ---------- clock ---------- */
+function tickClock(){document.getElementById("clock").textContent="Synced "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});}
+tickClock();setInterval(tickClock,30000);
+
+/* ---------- cause list scan ---------- */
+const feedData=[
+  {hit:true,txt:"<b>Delhi High Court</b> · Daily Cause List · Court 7, Item 42 — <b>Ghosh Family Trust</b> · CS(OS) 88/2025 · For hearing"},
+  {hit:false,txt:"Delhi High Court · Item 43 — Sharma v. DDA (no match)"},
+  {hit:true,txt:"<b>NCLT Mumbai</b> · Court II, Item 18 — <b>Regent Steel v. Kohli Infra</b> · CP (IB) 214/2026 · Reply &amp; directions"},
+  {hit:false,txt:"NCLT Mumbai · Item 19 — In re: Vertex Traders (no match)"},
+  {hit:false,txt:"Saket District Court · 214 items scanned — no matches"},
+  {hit:true,txt:"<b>Saket District Court</b> · Court 12, Item 7 — <b>State v. Malhotra</b> · SC 771/2024 · Evidence stage"}
+];
+function runScan(){
+  const feed=document.getElementById("feed"),scanline=document.getElementById("scanline");
+  feed.innerHTML="";scanline.textContent="Scanning 3 forums · 612 listed items…";
+  document.getElementById("scanResult").classList.add("show");
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=feedData.length){
+      clearInterval(iv);
+      scanline.textContent="✔ Scan complete in 4.2 seconds. Manual checking time eliminated: 45 min/day.";
+      buildWA();return;
+    }
+    const f=feedData[i],d=document.createElement("div");
+    d.className="feed-item"+(f.hit?"":" dim");
+    d.innerHTML=`<span class="dot ${f.hit?"hit":"miss"}"></span><span>${f.txt}</span>`;
+    feed.appendChild(d);i++;
+  },320);
+}
+function buildWA(){
+  document.getElementById("waMsg").textContent=
+`Good morning — today's listings (${new Date().toLocaleDateString("en-IN",{day:"numeric",month:"short"})}):
+
+1. Ghosh Family Trust
+   Delhi HC · Court 7 · Item 42 · For hearing
+   Owner: R. Iyer
+
+2. Regent Steel v. Kohli Infra
+   NCLT Mumbai · Court II · Item 18 · Reply & directions
+   Owner: A. Sharma
+
+3. State v. Malhotra
+   Saket DC · Court 12 · Item 7 · Evidence
+   Owner: T. Bose
+
+Case files are staged in the shared drive.
+— LexOps · 7:02 AM automated scan`;
+}
+
+/* ---------- limitation ---------- */
+const limRules={
+  ws:{name:"Written Statement — Civil Suit",rows:[["File Written Statement","CPC Order VIII — 30 days from service of summons",d=>addDays(d,30)],["Outer limit (court's discretion)","Extendable up to 90 days",d=>addDays(d,90)]]},
+  wsc:{name:"Written Statement — Commercial Suit",rows:[["File Written Statement","CPC as amended (Commercial Courts) — 30 days",d=>addDays(d,30)],["Absolute outer limit","120 days — right stands forfeited thereafter",d=>addDays(d,120)]]},
+  appeal_hc:{name:"First Appeal to High Court",rows:[["File First Appeal","Limitation Act, Art. 116 — 90 days from decree",d=>addDays(d,90)],["Apply for certified copy (recommended)","At the earliest — copy time excluded (Sec. 12)",d=>addDays(d,7)]]},
+  slp:{name:"Special Leave Petition",rows:[["File SLP","90 days from the impugned HC judgment (SC Rules)",d=>addDays(d,90)]]},
+  s34:{name:"Sec. 34 Challenge — Arbitral Award",rows:[["File Sec. 34 petition","A&C Act — 3 months from receipt of award",d=>addMonths(d,3)],["Condonable outer limit","+30 days (proviso to Sec. 34(3)) — barred thereafter",d=>addDays(addMonths(d,3),30)]]},
+  ibc61:{name:"Appeal to NCLAT (IBC)",rows:[["File appeal","IBC Sec. 61 — 30 days from the NCLT order",d=>addDays(d,30)],["Condonable outer limit","+15 days maximum — barred thereafter",d=>addDays(d,45)]]},
+  ni138:{name:"Cheque Dishonour — NI Act 138 chain",rows:[["Issue demand notice","Within 30 days of receipt of dishonour memo",d=>addDays(d,30)],["Drawer's payment window closes","15 days from service of notice (service date assumed — verify)",d=>addDays(d,45)],["File complaint","Within 1 month of the cause of action arising",d=>addMonths(addDays(d,45),1)]]},
+  consumer:{name:"Consumer Complaint",rows:[["File complaint","CP Act — 2 years from the cause of action",d=>addMonths(d,24)]]}
+};
+function calcLimitation(){
+  const t=document.getElementById("trigDate").value;
+  if(!t){alert("Please select a trigger date first.");return;}
+  const base=new Date(t+"T00:00:00"),rule=limRules[document.getElementById("caseType").value],body=document.getElementById("limBody");
+  body.innerHTML="";
+  rule.rows.forEach(r=>{
+    const due=r[2](base);
+    body.innerHTML+=`<tr><td><b>${r[0]}</b><br><span style="color:var(--muted);font-size:11px">${rule.name}</span></td><td>${r[1]}</td><td><b>${fmt(due)}</b></td><td>${countdown(due)}</td></tr>`;
+  });
+  document.getElementById("limResult").classList.add("show");
+}
+
+/* ---------- client update ---------- */
+const outcomes={
+  adjourned:{formal:"the matter stood adjourned. The next date of hearing is",warm:"the matter was adjourned today. The next hearing date is"},
+  arguments:{formal:"arguments were heard in part and shall continue on",warm:"arguments were partly heard today, and will continue on"},
+  order_reserved:{formal:"arguments concluded and the order has been reserved. We shall inform you immediately upon pronouncement.",warm:"arguments have concluded and the order is now reserved. We will let you know the moment it is pronounced."},
+  favourable:{formal:"we are pleased to report that a favourable interim order was passed. A copy shall follow upon availability.",warm:"good news — a favourable interim order was passed today. We will share the copy as soon as it is available."},
+  filing:{formal:"our reply and supporting documents were duly filed and taken on record. The next date is",warm:"our reply and documents were filed today and taken on record. The next date is"}
+};
+function genUpdate(){
+  const m=document.getElementById("cuMatter").value,o=document.getElementById("cuOutcome").value,reg=document.getElementById("cuLang").value,nd=document.getElementById("cuNext").value;
+  const nextStr=nd?fmt(new Date(nd+"T00:00:00")):"[to be notified]";
+  const needsDate=["adjourned","arguments","filing"].includes(o);
+  const opener=reg==="formal"?"Dear Sir/Madam,":"Dear Client,";
+  const closer=reg==="formal"?"Should you require any clarification, please do not hesitate to write to us.\n\nYours faithfully,":"No action is needed from your side at this stage — please feel free to reach out with any questions.\n\nWarm regards,";
+  document.getElementById("cuMsg").textContent=
+`${opener}
+
+Update on your matter — ${m}:
+
+At today's hearing, ${outcomes[o][reg]}${needsDate?" "+nextStr+".":""}
+
+${closer}
+Team Mehta & Associates LLP`;
+  document.getElementById("cuResult").classList.add("show");
+}
+
+/* ---------- billing cleaner ---------- */
+const verbMap=[
+  [/^(call|called|tel|phone|spoke)( with| to)?/i,"Telephone conference with"],
+  [/^(drafted|draft|prepared|prep)/i,"Drafted and revised"],
+  [/^(research|researched|res)( on)?/i,"Conducted legal research on"],
+  [/^(emails?|mail|corresp\w*)/i,"Reviewed and responded to correspondence regarding"],
+  [/^(went thru|went through|reviewed|review|read|perused)/i,"Reviewed and analysed"],
+  [/^(meeting|met|conf)( with)?/i,"Attended conference with"],
+  [/^(filed|filing)/i,"Prepared and effected filing of"],
+  [/^(hearing|attended hearing|court)/i,"Appeared and attended hearing in"]
+];
+const fixWords=[[/\babt\b/gi,"regarding"],[/\bopp side\b/gi,"opposing party's"],[/\bdocs\b/gi,"documents"],[/\breply\b/gi,"reply/written submissions"]];
+function cleanOne(line){
+  let task=line.replace(/\s*(—|–|--?)\s*[\d.]+\s*(h|hr|hrs)?\s*$/i,"").trim();
+  const hrs=(line.match(/([\d.]+)\s*(h|hr|hrs)?\s*$/i)||[])[1]||"";
+  if(!task)return null;
+  let t=task,matched=false;
+  for(const [re,rep] of verbMap){if(re.test(t)){t=t.replace(re,rep);matched=true;break;}}
+  if(!matched)t="Attended to "+t;
+  for(const [re,rep] of fixWords)t=t.replace(re,rep);
+  t=t.replace(/\s+/g," ").trim();
+  if(!/[.?!]$/.test(t))t+=", including consideration of related procedural requirements.";
+  return{before:task+(hrs?" — "+hrs:""),after:t.charAt(0).toUpperCase()+t.slice(1)+(hrs?` <b style="color:var(--muted)">(${hrs} hrs)</b>`:"")};
+}
+function cleanEntries(){
+  const lines=document.getElementById("rawEntries").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const b=document.getElementById("beforeCol"),a=document.getElementById("afterCol");
+  b.innerHTML="";a.innerHTML="";let n=0;
+  lines.forEach(l=>{const r=cleanOne(l);if(!r)return;n++;
+    b.innerHTML+=`<div style="margin-bottom:8px">• ${r.before}</div>`;
+    a.innerHTML+=`<div style="margin-bottom:8px">• ${r.after}</div>`;
+  });
+  document.getElementById("billSavings").textContent=`${n} entries cleaned in 0.3 seconds — partner rewrite time: zero.`;
+  document.getElementById("billResult").classList.add("show");
+}
+</script>
+
+</body>
+</html>
