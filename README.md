@@ -66,5 +66,5 @@ This is a portfolio demonstration with dummy data. Nothing here is legal advice,
 
 Open to legal-ops / business-analyst roles at law firms and legal-tech companies.
 
-- LinkedIn: [your-linkedin-url]
-- Email: [your-email]
+- LinkedIn:www.linkedin.com/in/poonam-nauroji
+- Email:naurojipunam@gmail.com
