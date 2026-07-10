@@ -15,7 +15,7 @@ https://poonam160498.github.io/lexops-legal-automation/
 ### Operations Dashboard
 Firm-wide view: matter pipeline with days-in-stage, billable-hours split, deadline urgency tracking, and a time-recovered ROI table.
 
-![Operations Dashboard]screenshots/01-dashboard.png
+![Operations Dashboard](screenshots/01-dashboard.png)
 
 ### 📋 Cause List Monitor
 Simulated 7 AM scan across Delhi HC, NCLT Mumbai and a district court — matches listings against the firm's matter index and drafts the morning team alert automatically.
