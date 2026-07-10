@@ -15,27 +15,27 @@ https://poonam160498.github.io/lexops-legal-automation/
 ### Operations Dashboard
 Firm-wide view: matter pipeline with days-in-stage, billable-hours split, deadline urgency tracking, and a time-recovered ROI table.
 
-![Operations Dashboard](screenshots/01-dashboard.png)
+![Operations Dashboard](/screenshots/01-dashboard.png)
 
 ### 📋 Cause List Monitor
 Simulated 7 AM scan across Delhi HC, NCLT Mumbai and a district court — matches listings against the firm's matter index and drafts the morning team alert automatically.
 
-![Cause List Monitor](screenshots/02-cause-list.png)
+![Cause List Monitor](/screenshots/02-cause-list.png)
 
 ### ⏳ Limitation Calculator
 One trigger date in — the full deadline chain out, with live colour-coded countdowns (shown: Sec. 34 challenge to an arbitral award).
 
-![Limitation Calculator](screenshots/03-limitation.png)
+![Limitation Calculator](/screenshots/03-limitation.png)
 
 ### 💬 Client Update Bot
 Post-hearing client updates drafted in a formal or warm register — the associate reviews and sends in one click.
 
-![Client Update Bot](screenshots/04-client-updates.png)
+![Client Update Bot](/screenshots/04-client-updates.png)
 
 ### 🧾 Billing Narrative Cleaner
 "call with client abt reply — 0.5" becomes "Telephone conference with client regarding reply/written submissions (0.5 hrs)" — before/after, side by side.
 
-![Billing Narrative Cleaner](screenshots/05-billing.png)
+![Billing Narrative Cleaner](/screenshots/05-billing.png)
 
 ## The problem
 
