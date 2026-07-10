@@ -8,14 +8,16 @@ Built by **Poonam Nauroji** — Business Analyst with legal domain knowledge and
 
 ## 🔴 Live demo
 
-**[https://poonam160498.github.io/lexops-legal-automation/](https://poonam160498.github.io/lexops-legal-automation/)** — no installation, no dependencies, no signup.
+**[https://poonam160498.github.io/lexops-legal-automation/]
+https://poonam160498.github.io/lexops-legal-automation/ 
+— no installation, no dependencies, no signup.
 
 ## 📸 Screenshots
 
 ### Operations Dashboard
 Firm-wide view: matter pipeline with days-in-stage, billable-hours split, deadline urgency tracking, and a time-recovered ROI table.
 
-![Operations Dashboard](screenshots/01-dashboard.png)
+![Operations Dashboard]screenshots/01-dashboard.png
 
 ### 📋 Cause List Monitor
 Simulated 7 AM scan across Delhi HC, NCLT Mumbai and a district court — matches listings against the firm's matter index and drafts the morning team alert automatically.
@@ -66,5 +68,5 @@ This is a portfolio demonstration with dummy data. Nothing here is legal advice,
 
 Open to legal-ops / business-analyst roles at law firms and legal-tech companies.
 
-- LinkedIn: [your-linkedin-url]
-- Email: [your-email]
+- LinkedIn:www.linkedin.com/in/poonam-nauroji
+- Email:naurojipunam@gmail.com
