@@ -7,8 +7,6 @@ Built by **Poonam Nauroji** — Business Analyst with legal domain knowledge and
 > Dashboards show you the problem. Automation removes it. LexOps does both.
 
 ## 🔴 Live demo
-
-**[https://poonam160498.github.io/lexops-legal-automation/]
 https://poonam160498.github.io/lexops-legal-automation/ 
 — no installation, no dependencies, no signup.
 
